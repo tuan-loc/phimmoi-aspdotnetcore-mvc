@@ -1,0 +1,111 @@
+﻿@model PagedList<UserViewModel>
+
+@{
+    ViewData["Title"] = "Quản lí User";
+    List<string> roles = (List<string>?)ViewData["roles"] ?? new List<string>();
+}
+
+<div class="d-flex mt-4 mb-2" style="justify-content: space-between">
+    <h2 class="text-success">@ViewData["Title"]</h2>
+    <div>
+        <ul class="d-flex flex-wrap-reverse align-items-center" style="list-style: none">
+            <li class="mt-4 mt-sm-0 me-3 nav-item dropdown ignore-hover">
+                <a class="nav-link dropdown-toggle" data-bs-toggle="dropdown" href="#" role="button" 
+                    aria-haspopup="true" aria-expanded="false">
+                    Lọc theo Role
+                </a>
+                <div class="dropdown-menu">
+                    <a class="dropdown-item" href="@Url.Action("Index", "User", 
+                        new {
+                            area = "Admin",
+                            page = 1,
+                        })">Tất cả</a>
+                    
+                    @foreach(var role in roles)
+                    {
+                        <a class="dropdown-item" href="@Url.Action("Index", "User", new
+                            {
+                                area = "Admin",
+                                page = 1, 
+                                role = role,
+                            })">
+                            @role
+                        </a>
+                    }
+                </div>
+            </li>
+            <li class="nav-item">
+                <form id="search-name-form" class="d-flex" method="get" asp-area="Admin" asp-route-page="1">
+                    <input name="value" class="form-control me-sm-2" type="text" required placeholder="Nhập tên">
+                    <button id="search-name-btn" class="btn btn-secondary my-2 my-sm-0" type="submit">Search</button>
+                </form>
+            </li>
+        </ul>
+    </div>
+</div>
+
+@if (ViewData["value"] != null)
+{
+    <h3 class="text-success">Kết quả tìm kiếm: @ViewData["value"].</h3>
+}
+else if (ViewData["role"] != null)
+{
+    <h3 class="text-success">Role: @ViewData["role"].</h3>
+}
+
+@if(Model != null && Model.Any())
+{
+    <p class="text-success">@Model.TotalItems kết quả.</p>
+    <table class="table table-hover">
+        <thead>
+            <tr class="table-info">
+                <th scope="col">User</th>
+                <th scope="col">Tên</th>
+                <th scope="col" class="d-md-table-cell d-none">Email</th>
+                <th scope="col">Vai trò</th>
+                <th scope="col">Tác vụ</th>
+            </tr>
+        </thead>
+        <tbody>
+            @foreach (var user in Model)
+            {
+                string rowColor = "table-dark";
+                if (user.RoleName == "Thủy Tổ") rowColor = "table-warning";
+                else if (user.RoleName == "Admin") rowColor = "table-danger";
+
+                <tr class="@rowColor">
+                    <th scope="row">
+                        <img src="@(user.Avatar ?? "/src/img/UserAvatars/default_avatar.png")" class="avatar" style="width: 30px; height:30px;">
+                    </th>
+                    <th class="overflow-hidden">@user.DisplayName</th>
+                    <td class="d-md-table-cell d-none overflow-hidden">@user.Email</td>
+                    <td class="overflow-hidden">@(user.RoleName ?? "")</td>
+                    <td>
+                        <a class="btn btn-success" asp-area="Admin" asp-controller="User" asp-action="Edit" asp-route-userid="@user.Id">Chỉnh sửa</a>
+                    </td>
+                </tr>
+            }
+        </tbody>
+    </table>
+}
+else
+{
+    <h3>Không có kết quả :((</h3>
+}
+
+@{
+    PagingModel pagingModel = new PagingModel
+            {
+                NumberOfPages = Model?.TotalPage ?? 1,
+                CurrentPage = Model?.CurrentPage ?? 1,
+                Callback = (int page) => Url.Action("Index", "User", new
+                {
+                    area = "Admin",
+                    page = page,
+                    value = ViewData["value"],
+                    role = ViewData["role"]
+                })
+            };
+}
+
+<partial name="/Views/Shared/_PagingPartial.cshtml" for="@pagingModel"></partial>

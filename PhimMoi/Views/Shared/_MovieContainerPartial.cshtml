@@ -1,0 +1,27 @@
+﻿@model List<MovieViewModel>
+
+@if (Model != null && Model.Any())
+{
+	<div class="movie-container my-5">
+		<div class="movie-row d-flex row-cols-lg-5 row-cols-md-4 row-cols-2 flex-wrap">
+			@foreach (var movie in Model)
+			{
+				if (movie != null)
+				{
+					<div class="movie-item">
+						<a asp-area="" asp-controller="Movie" asp-action="Detail" asp-route-id="@movie.Id" class="movie-item-body">
+							<img loading="lazy" src="@(movie.Image ?? "~/src/img/UserAvatars/default_avatar.png")"
+								class="w-100 h-100 img-fit">
+							<p class="movie-item-name background-blur text-truncate w-100">@movie.TranslateName</p>
+							<p class="movie-status">@movie.StatusToString</p>
+						</a>
+					</div>
+				}
+			}
+		</div>
+	</div>
+}
+else
+{
+	<h3 class="mb-5 mt-3">Không có kết quả :((</h3>
+}

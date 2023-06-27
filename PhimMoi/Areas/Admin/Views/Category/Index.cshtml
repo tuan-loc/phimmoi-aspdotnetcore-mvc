@@ -1,0 +1,73 @@
+﻿@model PagedList<CategoryViewModel>
+
+@{
+    ViewData["Title"] = "Quản lí Category";
+}
+
+<div class="d-flex mt-4 mb-2" style="justify-content: space-between">
+    <h2 class="text-success">@ViewData["Title"]</h2>
+
+    <div>
+        <ul class="d-flex align-items-center" style="list-style: none">
+            <li class="nav-item">
+                <form id="search-name-form" class="d-flex" method="get" asp-area="Admin" asp-route-page="1">
+                    <input name="value" class="form-control me-sm-2" type="text" required placeholder="Nhập tên">
+                    <button id="search-name-btn" class="btn btn-secondary my-2 my-sm-0" type="submit">Search</button>
+                </form>
+            </li>
+        </ul>
+    </div>
+</div>
+<div class="my-3">
+    <a class="btn btn-success" asp-area="Admin" asp-controller="Category" asp-action="Create">Thêm thể loại</a>
+</div>
+
+@if (ViewData["value"] != null)
+{
+    <h3 class="text-success">Kết quả tìm kiếm thể loại : @ViewData["value"].</h3>
+}
+
+@if (Model != null && Model.Any())
+{
+    <p class="text-success">@Model.TotalItems kết quả.</p>
+    <table class="table table-hover">
+        <thead>
+            <tr class="table-info">
+                <th scope="col">Thể loại</th>
+                <th scope="col">Tác vụ</th>
+            </tr>
+        </thead>
+        <tbody>
+            @foreach (var category in Model)
+            {
+                <tr>
+                    <th class="overflow-hidden">@category.Name</th>
+                    <td>
+                        <a class="btn btn-success" asp-area="Admin" asp-controller="Category" asp-action="Edit" asp-route-cateid="@category.Id">Chỉnh sửa</a>
+                    </td>
+                </tr>
+            }
+        </tbody>
+    </table>
+}
+else
+{
+    <h3>Không có kết quả :((</h3>
+}
+
+@{
+    PagingModel pagingModel = new PagingModel
+            {
+                NumberOfPages = Model?.TotalPage ?? 1,
+                CurrentPage = Model?.CurrentPage ?? 1,
+                Callback = (int page) => Url.Action("Index", "Category", new
+                {
+                    area = "Admin",
+                    page = page,
+                    value = ViewData["value"]
+                })
+            };
+}
+
+<partial name="/Views/Shared/_PagingPartial.cshtml" for="@pagingModel"></partial>
+

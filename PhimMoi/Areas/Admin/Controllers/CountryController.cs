@@ -1,0 +1,123 @@
+﻿using AutoMapper;
+using Microsoft.AspNetCore.Authorization;
+using Microsoft.AspNetCore.Mvc;
+using Microsoft.AspNetCore.Mvc.ModelBinding;
+using PhimMoi.Application.Interfaces;
+using PhimMoi.Areas.Admin.Models.Country;
+using PhimMoi.Domain.Models;
+using PhimMoi.Domain.PagingModel;
+using PhimMoi.Domain.Parameters;
+using PhimMoi.Models.Country;
+using PhimMoi.SharedLibrary.Constants;
+
+namespace PhimMoi.Areas.Admin.Controllers
+{
+    [Area("Admin")]
+    [Authorize(Roles = $"{RoleConstant.ADMIN}, {RoleConstant.THUY_TO}")]
+    public class CountryController : Controller
+    {
+        private readonly ICountryService _countryService;
+        private readonly IMapper _mapper;
+        private const int COUNTRY_PER_PAGE = 15;
+
+        public CountryController(ICountryService countryService, IMapper mapper)
+        {
+            _countryService = countryService;
+            _mapper = mapper;
+        }
+
+        [HttpGet]
+        public async Task<IActionResult> Index(int page, string? value = null)
+        {
+            PagedList<Country> countries = await _countryService.SearchAsync(value, new PagingParameter(page, COUNTRY_PER_PAGE));
+            if(value != null)
+            {
+                ViewData["value"] = value;
+            }
+            return View(_mapper.Map<PagedList<CountryViewModel>>(countries));
+        }
+
+        [HttpGet]
+        public IActionResult Create()
+        {
+            return View(new CreateCountryViewModel());
+        }
+
+        [HttpPost]
+        public async Task<IActionResult> Create(CreateCountryViewModel model)
+        {
+            if (!ModelState.IsValid)
+            {
+                ModelState.AddModelError(string.Empty, "Lỗi không thể thêm quốc gia.");
+                return View(model);
+            }
+
+            Country country = _mapper.Map<Country>(model);
+            try
+            {
+                await _countryService.CreateAsync(country);
+            }
+            catch (Exception e)
+            {
+                TempData["status"] = "Lỗi, " + e.Message;
+                return View(model);
+            }
+
+            TempData["success"] = $"Đã thêm quốc gia {model.Name}.";
+            return RedirectToAction("Index", new { area = "Admin" });
+        }
+
+        [HttpGet]
+        public async Task<IActionResult> Edit(string countryId)
+        {
+            var country = await _countryService.GetByIdAsync(countryId);
+            if(country == null)
+            {
+                return View("/Views/Shared/404.cshtml");
+            }
+
+            return View(_mapper.Map<EditCountryViewModel>(country));
+        }
+
+        [HttpPost]
+        public async Task<IActionResult> Edit(string countryId, EditCountryViewModel model)
+        {
+            if (!ModelState.IsValid)
+            {
+                ModelState.AddModelError(string.Empty, "Lỗi không thể sửa.");
+                return View(model);
+            }
+
+            Country country = _mapper.Map<Country>(model);
+            try
+            {
+                await _countryService.UpdateAsync(countryId, country);
+            }
+            catch (Exception e)
+            {
+                TempData["status"] = "Lỗi, " + e.Message;
+                return View(model);
+            }
+
+            TempData["success"] = "Chỉnh sửa thành công.";
+            return RedirectToAction("Index", new { area = "Admin" });
+        }
+
+        [HttpPost]
+        public async Task<IActionResult> Delete(string countryId)
+        {
+            try
+            {
+                await _countryService.DeleteAsync(countryId);
+            }
+            catch (Exception e)
+            {
+                TempData["status"] = "Lỗi, " + e.Message;
+                return RedirectToAction("Edit", new { area = "Admin", countryId = countryId });
+            }
+
+            TempData["success"] = "Xóa thành công.";
+            return RedirectToAction("Index", new { area = "Admin" });
+        }
+    }
+}

@@ -1,0 +1,76 @@
+﻿@model PagedList<MovieViewModel>
+
+@{
+    ViewData["Title"] = "Quản lí phim";
+}
+
+<div class="d-flex mt-4 mb-2" style="justify-content: space-between">
+    <h2 class="text-success">@ViewData["Title"]</h2>
+
+    <div>
+        <ul class="d-flex align-items-center" style="list-style: none">
+            <li class="nav-item">
+                <form id="search-name-form" class="d-flex" method="get" asp-area="Admin" asp-route-page="1">
+                    <input name="value" class="form-control me-sm-2" type="text" required placeholder="Nhập tên phim">
+                    <button id="search-name-btn" class="btn btn-secondary my-2 my-sm-0" type="submit">Search</button>
+                </form>
+            </li>
+        </ul>
+    </div>
+</div>
+<div class="my-3">
+    <a class="btn btn-success" asp-area="Admin" asp-controller="Movie" asp-action="Create">Thêm phim mới</a>
+</div>
+
+@if (ViewData["value"] != null)
+{
+    <h3 class="text-success">Kết quả tìm kiếm phim : @ViewData["value"].</h3>
+}
+
+@if (Model != null && Model.Any())
+{
+    <p class="text-success">@Model.TotalItems kết quả.</p>
+    <table class="table table-hover">
+        <thead>
+            <tr class="table-info">
+                <th scope="col">Phim</th>
+                <th scope="col">Tên</th>
+                <th scope="col">Tác vụ</th>
+            </tr>
+        </thead>
+        <tbody>
+            @foreach (var movie in Model)
+            {
+                <tr>
+                    <th scope="row">
+                        <img src="@(movie.Image ?? "")" class="avatar" style="width: 50px; height:50px;">
+                    </th>
+                    <th class="overflow-hidden">@movie.TranslateName</th>
+                    <td>
+                        <a class="btn btn-success" asp-area="Admin" asp-controller="Movie" asp-action="Edit" asp-route-movieid="@movie.Id">Chỉnh sửa</a>
+                    </td>
+                </tr>
+            }
+        </tbody>
+    </table>
+}
+else
+{
+    <h3>Không có kết quả :((</h3>
+}
+
+@{
+    PagingModel pagingModel = new PagingModel
+            {
+                NumberOfPages = Model?.TotalPage ?? 1,
+                CurrentPage = Model?.CurrentPage ?? 1,
+                Callback = (int page) => Url.Action("Index", "Movie", new
+                {
+                    area = "Admin",
+                    page = page,
+                    value = ViewData["value"]
+                })
+            };
+}
+
+<partial name="/Views/Shared/_PagingPartial.cshtml" for="@pagingModel"></partial>

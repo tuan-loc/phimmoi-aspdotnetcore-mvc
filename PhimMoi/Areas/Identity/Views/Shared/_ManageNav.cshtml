@@ -1,0 +1,24 @@
+﻿﻿@using PhimMoi.Areas.Identity.NavPages;
+
+@{
+    string page = "";
+    if (TempData["currentNav"] != null)
+    {
+        page = (string)(TempData["currentNav"] ?? "");
+    }
+}
+
+<ul class="nav nav-pills flex-column">
+    <li class="nav-item" style="background-color: rgba(0,0,0,0.6);">
+        <a class="nav-link text-center @ManageNavPages.IndexNavClass(page)" id="profile" asp-area="Identity" asp-controller="Account" asp-action="Index">Profile</a>
+    </li>
+    <li class="nav-item" style="background-color: rgba(0,0,0,0.6);">
+        <a class="nav-link text-center @ManageNavPages.LikedMovieNavClass(page)" id="liked-movies" asp-area="Identity" asp-controller="Account" asp-action="LikedMovies">Liked</a>
+    </li>
+    <li class="nav-item" style="background-color: rgba(0,0,0,0.6);">
+        <a class="nav-link text-center @ManageNavPages.EmailNavClass(page)" id="email" asp-area="Identity" asp-controller="Account" asp-action="Email">Email</a>
+    </li>
+    <li class="nav-item" style="background-color: rgba(0,0,0,0.6);">
+        <a class="nav-link text-center @ManageNavPages.ChangePasswordNavClass(page)" id="change-password" asp-area="Identity" asp-controller="Account" asp-action="ChangePassword">Password</a>
+    </li>
+</ul>

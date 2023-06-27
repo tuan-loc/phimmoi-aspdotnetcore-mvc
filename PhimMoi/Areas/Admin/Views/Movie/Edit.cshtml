@@ -1,0 +1,154 @@
+﻿@model EditMovieViewModel
+
+@{
+    ViewData["Title"] = $"Sửa phim {Model.Name}";
+
+    var typeList = new SelectList(new List<string>{"none", "Phim lẻ", "Phim bộ"});
+    var statusList = new SelectList(new List<string> { "none", "Full HD", "CAM", "Trailer" });
+
+    var countries = (SelectList)(ViewData["countries"] ?? new SelectList(null));
+
+    string videoUrl = "";
+    if (Model.Videos != null && Model.Videos.Length > 0 && Model.Type == "Phim lẻ")
+    {
+        videoUrl = Model.Videos[0];
+    }
+}
+
+<h2 class="text-success">@ViewData["Title"]</h2>
+
+<partial name="/Views/Shared/_ModalConfirm.cshtml"></partial>
+<partial name="_StatusMessage" for="@TempData["status"]" />
+<partial name="_ModalCast" />
+<partial name="_ModalCategory" />
+<partial name="_ModalDirector" />
+
+<div class="mt-4">
+    <div id="edit-movie-form">
+        <div asp-validation-summary="All" class="text-danger"></div>
+        <div class="form-group">
+            <label class="text-success" asp-for="Name">Tên phim</label>
+            <input id="movie-name" asp-for="Name" class="form-control" placeholder="Nhập tên phim" />
+            <span id="movie-name-valid" class="text-danger"></span>
+        </div>
+        <div class="form-group mt-3">
+            <label class="text-success" asp-for="TranslateName">Tên phim dịch sang Tiếng Việt</label>
+            <input id="movie-translate-name" asp-for="TranslateName" class="form-control" placeholder="Nhập tên" />
+            <span id="movie-translate-name-valid" class="text-danger"></span>
+        </div>
+        <div class="form-group mt-3">
+            <label class="text-success" asp-for="Description">Nội dung</label>
+            <textarea id="movie-desc" asp-for="Description" class="form-control" placeholder="Nhập nội dung"></textarea>
+            <span asp-validation-for="Description" class="text-danger"></span>
+        </div>
+        <div class="form-group mt-3">
+            <label class="text-success" asp-for="Length">Thời lượng phim(phút)</label>
+            <input id="movie-length" type="number" asp-for="Length" class="form-control" />
+        </div>
+        <div class="form-group mt-3">
+            <label class="text-success" asp-for="Rating">Điểm Rating</label>
+            <input id="movie-rating" type="number" asp-for="Rating" class="form-control" />
+            <span id="movie-rating-valid" class="text-danger"></span>
+        </div>
+        <div class="form-group mt-3">
+            <h5>Ảnh</h5>
+            <input id="movie-image-text" type="text" hidden asp-for="Image"/>
+            <img src="@(Model.Image ?? "/src/img/UserAvatars/default_avatar.png")" class="avatar avatar-square img-fit" 
+                style="width: 200px; height:200px;" />
+        </div>
+        <div class="form-group mt-3">
+            <label class="text-success" asp-for="ImageFile">Thay ảnh</label> <span class="text-decoration-underline">( chọn ảnh đừng quá 200KB nhé :(( )</span>
+            <input id="movie-img" asp-for="ImageFile" type="file" class="form-control">
+            <span id="movie-image-valid" class="text-danger"></span>
+        </div>
+        <div class="form-group mt-5 pb-2 border-bottom">
+            <label class="text-success" asp-for="ReleaseDate">Nhập ngày ra mắt</label>
+            <input id="movie-date" asp-for="ReleaseDate"/>
+        </div>
+        <div class="d-flex align-items-center form-group mt-3 pb-2 border-bottom">
+            <label class="me-3 mt-3 mb-3 text-success">Thể loại : </label>
+            <textarea id="select-category" asp-for="CategoryToString" disabled></textarea>
+            <button onclick="showModalCategory()" class="btn btn-primary ms-2">Chọn</button>
+        </div>
+        <div class="d-flex align-items-center form-group mt-3 pb-2 border-bottom">
+            <label class="me-3 mt-3 mb-3 text-success">Diễn viên : </label>
+            <textarea id="select-cast" asp-for="CastToString" disabled></textarea>
+            <button onclick="showModalCast()" class="btn btn-primary ms-2">Chọn</button>
+        </div>
+        <div class="d-flex align-items-center form-group mt-3 pb-2 border-bottom">
+            <label class="me-3 mt-3 mb-3 text-success">Đạo diễn : </label>
+            <textarea id="select-director" asp-for="DirectorToString" disabled></textarea>
+            <button onclick="showModalDirector()" class="btn btn-primary ms-2">Chọn</button>
+        </div>
+        <div class="form-group mt-3 pb-2 border-bottom">
+            <label class="me-3 mt-3 mb-3 text-success">Quốc gia : </label>
+            <select id="select-country" asp-items="@countries" asp-for="Country"></select>
+        </div>
+        <div class="form-group mt-3 pb-2 border-bottom">
+            <label class="me-3 mt-3 mb-3 text-success">Trailer : (chỉ dán url video từ youtube)</label>
+            <p>Link phải có dạng https://www.youtube.com/embed/(video-id), trong đó video-id lấy từ Url của video trên youtube.</p>
+            <input id="movie-trailer" type="text" placeholder="Dán trailer url vào đây." asp-for="Trailer" />
+        </div>
+        <div class="form-group mt-3 pb-2 border-bottom">
+            <label class="me-3 mt-3 mb-3 text-success">Trạng thái : </label>
+            <select id="status-list" asp-items="@statusList" asp-for="Status"></select>
+            <span id="status-list-valid" class="text-danger"></span>
+        </div>
+        <div class="d-flex flex-wrap align-items-center form-group mt-3 pb-2 border-bottom">
+            <label asp-for="Tags" class="me-3 mt-3 mb-3 text-success">Nhập tags : (các Tag cách nhau bằng dấu , nhé :^)</label>
+            <textarea id="select-tag" asp-for="Tags"></textarea>
+        </div>
+        <div class="form-group mt-3">
+            <p class="text-success">Link video phải có dạng :</p>
+            <p> https://www.googleapis.com/drive/v3/files/(video-id)? alt=media&key= AIzaSyALAnovaVGD6gFejFLClsUB8Ho68ztlTPM</p>
+            <p>Trong đó video-id là id của video lấy từ gg drive, nhớ xóa dấu cách :((</p>
+            <label class="me-3 mt-3 mb-3">Loại : </label>
+            <select id="type-list" asp-items="@typeList" asp-for="Type"></select>
+            <span id="type-list-valid" class="text-danger"></span>
+        </div>
+        <div id="select-video" class="mx-5">
+            @if (Model.Type == "Phim lẻ")
+            {
+                <p class="text-success"> ** Video</p>
+                <label>Url video : </label>
+                <input class="url-video" value="@videoUrl" placeholder="Url"/>
+            }
+            else if (Model.Type == "Phim bộ")
+            {
+                <p class="text-success">Sửa số tập : </p>
+                <label>Số tập : </label>
+                <input id="select-episode" type="number" value="@Model.EpisodeCount" placeholder="0" />
+            }
+        </div>
+        <div id="select-url" class="mx-10">
+            @if (Model.Type == "Phim bộ")
+            {
+                for (int i = 0; i < Model.EpisodeCount; i++)
+                {
+                    if (Model.Videos == null || Model.Videos.Length <= i) continue;
+
+                    <div id="episodes" class="mx-5">
+                        <label>Tập @(i + 1) : </label>
+                        <input class="url-video" value="@Model.Videos[i]" placeholder="Dán Url vào đây" />
+                    </div>
+                }  
+            }
+        </div>
+        <button id="edit-movie-btn" class="btn btn-primary mt-4">Sửa</button>
+        <form id="delete-movie" method="post" asp-area="Admin" asp-action="Delete" asp-route-movieid="@Model.Id">
+            <button id="delete-movie-btn" class="btn btn-danger mt-4">Xóa phim</button>
+        </form>
+    </div>
+</div>
+
+@section Scripts {
+    <script src="//cdnjs.cloudflare.com/ajax/libs/toastr.js/latest/toastr.min.js"></script>
+    <script src="~/js/ModalConfirm.js" asp-append-version="true"></script>
+    <script type="text/javascript">
+        var movieid = '@Model.Id';
+    </script>
+    <script src="/js/Admin/Movie/ModalCast.js"></script>
+    <script src="/js/Admin/Movie/ModalCategory.js"></script>
+    <script src="/js/Admin/Movie/ModalDirector.js"></script>
+    <script src="/js/Admin/Movie/MovieEdit.js"></script>
+}

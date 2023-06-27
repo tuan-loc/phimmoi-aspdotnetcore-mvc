@@ -1,0 +1,26 @@
+﻿using Microsoft.AspNetCore.Identity;
+
+namespace PhimMoi.Application.Models
+{
+    public class Result
+    {
+        public bool Success { get; set; }
+        public List<string>? Errors { get; set; }
+
+        public static Result OK() => new Result { Success = true };
+
+        public static Result Error(params string[] errors)
+        {
+            return new Result
+            {
+                Success = false,
+                Errors = errors.ToList()
+            };
+        }
+
+        public static Result ToAppResult(IdentityResult identityResult)
+        {
+            return identityResult.Succeeded ? OK() : Error(identityResult.Errors.Select(e => e.Description).ToArray());
+        }
+    }
+}
